@@ -14,6 +14,10 @@ https://docs.aws.amazon.com/cdk/v2/guide/work-with-cdk-typescript.html
 CDK sample project, https://docs.aws.amazon.com/cdk/v2/guide/hello_world.html
 cdk init app --language typescript
 
+Prepare the AWS environment to deploy and manage CDK applications:
+cdk bootstrap 
+
+
 -----------------------------
 General information
 -----------------------------
