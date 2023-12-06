@@ -1,19 +1,40 @@
-import { Duration, Stack, StackProps } from 'aws-cdk-lib';
-import * as sns from 'aws-cdk-lib/aws-sns';
-import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
-import * as sqs from 'aws-cdk-lib/aws-sqs';
-import { Construct } from 'constructs';
+import {Duration, Stack, StackProps} from 'aws-cdk-lib';
+import {Construct} from 'constructs';
+
+import {Queue} from 'aws-cdk-lib/aws-sqs';
+
+import {SqsEventSource} from 'aws-cdk-lib/aws-lambda-event-sources';
+
+import {NodejsFunction} from 'aws-cdk-lib/aws-lambda-nodejs';
+import {Runtime} from 'aws-cdk-lib/aws-lambda';
+
+import {join} from 'path';
 
 export class AwsCdkSqsLambdaStack extends Stack {
-  constructor(scope: Construct, id: string, props?: StackProps) {
-    super(scope, id, props);
+	constructor(scope: Construct, id: string, props?: StackProps) {
+		super(scope, id, props);
 
-    const queue = new sqs.Queue(this, 'AwsCdkSqsLambdaQueue', {
-      visibilityTimeout: Duration.seconds(300)
-    });
+		// create SQS queue
+		const queue = new Queue(this, 'AwsCdkSqsLambdaQueue', {
+			visibilityTimeout: Duration.seconds(300), // max time a message can be processed by a consumer before it becomes visible to other consumers.
+		});
 
-    const topic = new sns.Topic(this, 'AwsCdkSqsLambdaTopic');
+		// create Lambda function
+		// NodejsFunction construct creates a Lambda function with automatic transpiling and bundling.
+		const sqsLambda = new NodejsFunction(this, 'SQSLambda', {
+			runtime: Runtime.NODEJS_LATEST,
+			handler: 'handler',
+			entry: join(__dirname, '..', 'lambda', 'handler.ts'),
+			environment: {
+				QUEUE_URL: queue.queueUrl,
+			},
+		});
 
-    topic.addSubscription(new subs.SqsSubscription(queue));
-  }
+		// use SQS queue as an event source for Lambda.
+		sqsLambda.addEventSource(
+			new SqsEventSource(queue, {
+				enabled: true, // enable the event source mapping.
+			})
+		);
+	}
 }
