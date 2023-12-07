@@ -23,7 +23,7 @@ export class AwsCdkSqsLambdaStack extends Stack {
 		// NodejsFunction construct creates a Lambda function with automatic transpiling and bundling.
 		const sqsLambda = new NodejsFunction(this, 'SQSLambda', {
 			runtime: Runtime.NODEJS_LATEST,
-			handler: 'handler',
+			handler: 'sqsHandler',
 			entry: join(__dirname, '..', 'lambda', 'handler.ts'),
 			environment: {
 				QUEUE_URL: queue.queueUrl,
